@@ -68,7 +68,7 @@ char** ksh_split_line(char* line) {
     tokens[pos] = NULL;
     return tokens;
 }
-int ksh_excute(**args) {
+int ksh_launch(**args) {
     pid_t pid, wpid;
     int status;
 
@@ -86,6 +86,70 @@ int ksh_excute(**args) {
         } while (!WIFEXITED(status) && WIFSIGNALED(status));
     }
 }
+/*
+ Function Declarations for builtin shell commands:
+ */
+int ksh_cd(char** args);
+int ksh_help(char** args);
+int ksh_exit(char** args);
+
+/*
+ List of builtin commands.
+ */
+char* builtin_str[3] = {
+    "cd",
+    "help",
+    "exit"
+};
+
+int (*builtin_func[3]) (char**) = {
+    &ksh_cd,
+    &ksh_help,
+    &ksh_exit
+};
+
+int ksh_num_builtins() {
+    return sizeof(builtin_str) / sizeof(char*);
+}
+
+int ksh_cd(char** args) {
+    if (args[1] == NULL) {
+        fprintf(stderr, "ksh: expected argument to \"cd\"\n");
+    } else {
+        if (chdir(args[1]) != 0) {
+            perror("ksh");
+        }
+    }
+    return 1;
+}
+
+int ksh_help(char **args) {
+    int i;
+    for (i = 0; i < ksh_num_builtins(); i++) {
+        printf("%s\n", builtin_str[i]);
+    }
+    return 1;
+}
+
+int ksh_exit(char** args) {
+    return 0;
+}
+
+int ksh_execute(char** args) {
+    int i;
+
+    if (args[0] == NULL) {
+        return 1;
+    }
+
+    for (i = 0; i < ksh_num_builtins(); i++) {
+        if (strcmp(args[0], builtin_str[i]) == 0) {
+            return (*builtin_func[i])(args);
+        }
+    }
+    return ksh_launch(args);
+}
+
 void ksh_loop(void) {
     char *line;
     char **args;
@@ -95,7 +159,7 @@ void ksh_loop(void) {
         printf("> ");
         line = ksh_read_line();
         args = ksh_split_line(line);
-        status = ksh_excute(args);
+        status = ksh_execute(args);
 
         free(line);
         free(args);
