@@ -23,7 +23,7 @@ A simple shell (command-line interpreter) implemented in C, named "KSH." This sh
 
 1. Clone this repository:
    ```bash
-   git clone <repository-url>
+   git clone "https://github.com/kabigon23/ksh.git"
    ```
 2. Navigate to the project directory:
    ```bash
